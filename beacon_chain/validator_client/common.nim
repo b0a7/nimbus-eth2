@@ -391,6 +391,19 @@ func AttestationToAggregationDuration*(vc: ValidatorClientRef): Duration =
 func AttestationToAggregationDurationSoft*(vc: ValidatorClientRef): Duration =
   vc.AttestationToAggregationDuration div 2
 
+func beaconApiTimeoutHard*(vc: ValidatorClientRef): Duration =
+  # Obol/Charon middleware needs a full slot; a local BN uses the aggregation window.
+  if vc.config.distributedEnabled:
+    vc.SlotDuration
+  else:
+    vc.AttestationToAggregationDuration
+
+func beaconApiTimeoutSoft*(vc: ValidatorClientRef): Duration =
+  if vc.config.distributedEnabled:
+    vc.SlotDurationSoft
+  else:
+    vc.AttestationToAggregationDurationSoft
+
 func AggregationToSlotEndDuration*(vc: ValidatorClientRef): Duration =
   vc.timeParams.SLOT_DURATION -
   nanoseconds(vc.timeParams.aggregateSlotOffset.nanoseconds)

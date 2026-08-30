@@ -1,5 +1,5 @@
 # beacon_chain
-# Copyright (c) 2018-2025 Status Research & Development GmbH
+# Copyright (c) 2018-2026 Status Research & Development GmbH
 # Licensed and distributed under either of
 #   * MIT license (license terms in the root directory or at https://opensource.org/licenses/MIT).
 #   * Apache v2 license (license terms in the root directory or at https://www.apache.org/licenses/LICENSE-2.0).
@@ -14,6 +14,7 @@ import chronos/apps/http/httpserver
 import chronos/unittest2/asynctests
 import ../beacon_chain/spec/eth2_apis/eth2_rest_serialization,
        ../beacon_chain/validator_client/[api, common, scoring, fallback_service]
+from ../beacon_chain/spec/presets import defaultRuntimeConfig
 
 const
   HostNames = [
@@ -814,6 +815,37 @@ suite "Validator Client test suite":
         a2 = phase0.Attestation.init(vector[0][1][0], vector[0][1][1],
                                      vector[0][1][2])
       check getUniqueVotes([a1, a2]) == vector[1]
+
+  test "beacon API timeouts use attestation window by default":
+    let
+      vc = ValidatorClientRef(
+        config: ValidatorClientConf.load(
+          cmdLine = mapIt(["--beacon-node=http://127.0.0.1"], it)),
+        timeParams: defaultRuntimeConfig.timeParams)
+
+    check:
+      not vc.config.distributedEnabled
+      vc.beaconApiTimeoutHard == vc.AttestationToAggregationDuration
+      vc.beaconApiTimeoutSoft == vc.AttestationToAggregationDurationSoft
+      vc.beaconApiTimeoutHard < vc.SlotDuration
+      vc.beaconApiTimeoutSoft < vc.SlotDurationSoft
+
+  test "beacon API timeouts extend to slot duration when --distributed":
+    let
+      vc = ValidatorClientRef(
+        config: ValidatorClientConf.load(
+          cmdLine = mapIt(
+            ["--beacon-node=http://127.0.0.1", "--distributed"], it)),
+        timeParams: defaultRuntimeConfig.timeParams)
+
+    check:
+      vc.config.distributedEnabled
+      vc.beaconApiTimeoutHard == vc.SlotDuration
+      vc.beaconApiTimeoutSoft == vc.SlotDurationSoft
+      vc.beaconApiTimeoutHard == 12.seconds
+      vc.beaconApiTimeoutSoft == 6.seconds
+      vc.beaconApiTimeoutHard > vc.AttestationToAggregationDuration
+      vc.beaconApiTimeoutSoft > vc.AttestationToAggregationDurationSoft
 
   asyncTest "firstSuccessParallel() API timeout test":
     let

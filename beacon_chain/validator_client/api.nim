@@ -1592,7 +1592,7 @@ proc produceAttestationData*(
     let res = vc.firstSuccessParallel(
       RestPlainResponse,
       ProduceAttestationDataResponse,
-      vc.AttestationToAggregationDuration,
+      vc.beaconApiTimeoutHard,
       ViableNodeStatus,
       {BeaconNodeRole.AttestationData},
       produceAttestationDataPlain(it, slot, committee_index)):
@@ -1634,8 +1634,8 @@ proc produceAttestationData*(
       RestPlainResponse,
       ProduceAttestationDataResponse,
       float64,
-      vc.AttestationToAggregationDurationSoft,
-      vc.AttestationToAggregationDuration,
+      vc.beaconApiTimeoutSoft,
+      vc.beaconApiTimeoutHard,
       ViableNodeStatus,
       {BeaconNodeRole.AttestationData},
       produceAttestationDataPlain(it, slot, committee_index),
@@ -1675,7 +1675,7 @@ proc produceAttestationData*(
   of ApiStrategyKind.Priority:
     vc.firstSuccessSequential(
       RestPlainResponse,
-      vc.AttestationToAggregationDuration,
+      vc.beaconApiTimeoutHard,
       ViableNodeStatus,
       {BeaconNodeRole.AttestationData},
       produceAttestationDataPlain(it, slot, committee_index)):

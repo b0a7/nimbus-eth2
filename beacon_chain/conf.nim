@@ -1082,7 +1082,8 @@ type
       name: "payload-builder" .}: bool
 
     distributedEnabled* {.
-      desc: "Enable usage of Obol middleware (BETA)"
+      desc: "Enable usage of Obol middleware (BETA). Extends beacon node " &
+            "API timeouts to tolerate DVT/middleware latency"
       defaultValue: false
       name: "distributed".}: bool
 
